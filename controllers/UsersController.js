@@ -6,11 +6,11 @@ class UsersController {
   static async postNew(req, res) {
     const { email } = req.body;
     if (!email) {
-      res.status(400).json({ error: 'Missing email' });
+      return res.status(400).json({ error: 'Missing email' });
     }
     const { password } = req.body;
     if (!password) {
-      res.status(400).json({ error: 'Missing password' });
+      return res.status(400).json({ error: 'Missing password' });
     }
     const data = { email };
     const doc = await UsersController.findUser(data);
