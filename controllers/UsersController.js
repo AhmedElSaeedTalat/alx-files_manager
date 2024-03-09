@@ -15,13 +15,12 @@ class UsersController {
     const data = { email };
     const doc = await UsersController.findUser(data);
     if (doc) {
-      res.status(400).json({ error: 'Already exist' });
-    } else {
-      const hashedPassword = sha1(password);
-      const user = { email, password: hashedPassword };
-      const id = await UsersController.insert(user);
-      res.status(201).json({ id, email });
+      return res.status(400).json({ error: 'Already exist' });
     }
+    const hashedPassword = sha1(password);
+    const user = { email, password: hashedPassword };
+    const id = await UsersController.insert(user);
+    return res.status(201).json({ id, email });
   }
 
   static async findUser(data) {
