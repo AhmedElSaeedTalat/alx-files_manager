@@ -20,7 +20,7 @@ class UsersController {
       const hashedPassword = sha1(password);
       const user = { email, password: hashedPassword };
       const id = await UsersController.insert(user);
-      res.status(201).json({ email, id });
+      res.status(201).json({ id, email });
     }
   }
 
@@ -32,7 +32,7 @@ class UsersController {
 
   static async insert(user) {
     const inserted = await dbClient.db.collection('users').insertOne(user);
-    const id = inserted.inserted_id;
+    const id = inserted.insertedId;
     return id;
   }
 }
