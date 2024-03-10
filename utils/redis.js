@@ -59,11 +59,7 @@ class RedisClient {
    *
    */
   async del(key) {
-    this.client.del(key, (err) => {
-      if (err) {
-        console.log(err);
-      }
-    });
+    this.client.del(key);
   }
 }
 const redisClient = new RedisClient();
