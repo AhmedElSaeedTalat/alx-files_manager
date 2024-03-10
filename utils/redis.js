@@ -60,8 +60,8 @@ class RedisClient {
    */
   async del(key) {
     this.client.del(key, (err) => {
-      if (!err) {
-        console.log('deleted successfully');
+      if (err) {
+        console.log(err);
       }
     });
   }
