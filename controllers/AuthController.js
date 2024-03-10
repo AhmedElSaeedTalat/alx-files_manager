@@ -14,6 +14,9 @@ class AuthController {
   static async getConnect(req, res) {
     // decode base 64 to obtain email and password
     const { authorization } = req.headers;
+    if (!authorization) {
+      return res.status(401).json({ error: 'Unauthorized' });
+    }
     const pattern = '(?<=Basic ).+';
     const authData = authorization.match(pattern);
     const decodedString = Buffer.from(authData[0], 'base64').toString('utf-8');
