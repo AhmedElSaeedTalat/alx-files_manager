@@ -14,9 +14,6 @@ class AuthController {
   static async getConnect(req, res) {
     // decode base 64 to obtain email and password
     const { authorization } = req.headers;
-    if (!authorization) {
-      return res.status(401).json({ error: 'Unauthorized' });
-    }
     const pattern = '(?<=Basic ).+';
     const authData = authorization.match(pattern);
     const decodedString = Buffer.from(authData[0], 'base64').toString('utf-8');
@@ -37,6 +34,17 @@ class AuthController {
     return res.json({ token });
   }
 
+  /*
+   * getDisconnect
+   *
+   * delete users token
+   *
+   * @req: request passed
+   * @res: response object passed
+   *
+   * @return - empty response with status { 204 }
+   *
+   */
   static async getDisconnect(req, res) {
     const token = req.headers['x-token'];
     const id = await redisClient.get(`auth_${token}`);
