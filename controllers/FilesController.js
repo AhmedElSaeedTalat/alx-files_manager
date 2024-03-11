@@ -2,6 +2,7 @@ import { ObjectId } from 'mongodb';
 import { v4 } from 'uuid';
 import fs from 'fs';
 import path from 'path';
+import { promisify } from 'util';
 import redisClient from '../utils/redis';
 import dbClient from '../utils/db';
 import UsersController from './UsersController';
@@ -37,8 +38,6 @@ class FilesController {
     if (!isPublic) {
       isPublic = false;
     }
-    console.log(parentId);
-    console.log(isPublic);
     if (!name) {
       return res.status(400).json({ error: 'Missing name' });
     }
@@ -76,6 +75,8 @@ class FilesController {
         parentId: foundFile.parentId,
       });
     }
+    // decode data and create file in the folder path with the
+    // decoded data
     const dirPath = process.env.FOLDER_PATH || '/tmp/files_manager';
     const fileName = v4();
     const decodedData = Buffer.from(data, 'base64').toString('utf-8');
@@ -88,6 +89,7 @@ class FilesController {
       parentId,
       localPath: path.join(dirPath, fileName),
     };
+    // insert data about the file in a document in files collection
     const docId = await FilesController.insertDoctument(documentData);
     const foundFile = await FilesController.findFileById(docId);
     return res.status(201).json({
@@ -164,6 +166,126 @@ class FilesController {
    */
   static async createFolder(dirPath) {
     await fs.promises.mkdir(dirPath, { recursive: true });
+  }
+
+  /*
+   * getShow
+   *
+   * @function: retrieves document based on
+   * file id passed in the url and the linked
+   * file to the requesting user
+   *
+   * @req: request object passed
+   * @res: response object passed
+   *
+   * @return - file document found
+   *
+   */
+  static async getShow(req, res) {
+    // retrieve user through the token passed
+    const token = req.headers['x-token'];
+    const userId = await redisClient.get(`auth_${token}`);
+    const user = await UsersController.findUser({ _id: ObjectId(userId) });
+    if (!user) {
+      return res.status(401).json({ error: 'Unauthorized' });
+    }
+    const { id } = req.params;
+    const file = await FilesController.findFileById(id);
+    if (!file) {
+      return res.status(404).json({ error: 'Not found' });
+    }
+    if (file.userId.toString() !== user._id.toString()) {
+      return res.status(404).json({ error: 'Not found' });
+    }
+    const data = {
+      id: file._id.toString(),
+      userId: file.userId.toString(),
+      name: file.name,
+      type: file.type,
+      isPublic: file.isPublic,
+      parentId: file.parentId,
+    };
+    return res.json(data);
+  }
+
+  /*
+   * getIndex
+   *
+   * @function: retrieve documents based on
+   * passed params
+   *
+   * @req: request object passed
+   * @res: response object passed
+   *
+   */
+  static async getIndex(req, res) {
+    // get user by token
+    const token = req.headers['x-token'];
+    const userId = await redisClient.get(`auth_${token}`);
+    const user = await UsersController.findUser({ _id: ObjectId(userId) });
+    if (!user) {
+      return res.status(401).json({ error: 'Unauthorized' });
+    }
+    // access query parameter
+    const { parentId } = req.query;
+    let { page } = req.query;
+    if (!page) {
+      page = 1;
+    }
+    // data for paginating using aggrage
+    // converting aggregate to a promise
+    const pageSize = 20;
+    const collection = dbClient.db.collection('files');
+    const doAggregate = promisify(collection.aggregate).bind(collection);
+    // checking if parent Id exists and return files
+    // relevant to the parentId if exist
+    if (parentId) {
+      const parentFile = await FilesController.findFileById(parentId);
+      if (!parentFile) {
+        return res.json([]);
+      }
+      const result = await doAggregate([
+        { $match: { parentId } },
+        { $skip: (page - 1) * pageSize },
+        { $limit: pageSize },
+      ]);
+      const array = await result.toArray();
+      const dataResponse = [];
+      array.forEach((item) => {
+        const data = {
+          id: item._id.toString(),
+          userId: item.userId.toString(),
+          name: item.name,
+          type: item.type,
+          isPublic: item.isPublic,
+          parentId: item.parentId,
+        };
+        dataResponse.push(data);
+      });
+      return res.json(dataResponse);
+    }
+    // if no parent Id is passed a query
+    // parameter return all documents
+    // while using pagination through
+    // aggregate
+    const result = await doAggregate([
+      { $skip: (page - 1) * pageSize },
+      { $limit: pageSize },
+    ]);
+    const array = await result.toArray();
+    const dataResponse = [];
+    array.forEach((item) => {
+      const data = {
+        id: item._id.toString(),
+        userId: item.userId.toString(),
+        name: item.name,
+        type: item.type,
+        isPublic: item.isPublic,
+        parentId: item.parentId,
+      };
+      dataResponse.push(data);
+    });
+    return res.json(dataResponse);
   }
 }
 module.exports = FilesController;
