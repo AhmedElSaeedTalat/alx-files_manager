@@ -28,7 +28,7 @@ class AuthController {
     if (!user || hashedPassword !== user.password) {
       return res.status(401).json({ error: 'Unauthorized' });
     }
-    const token = v4();
+    const token = v4().toString();
     const key = `auth_${token}`;
     redisClient.set(key, user._id.toString(), 86400);
     return res.json({ token });
