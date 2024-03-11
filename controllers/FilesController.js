@@ -250,7 +250,7 @@ class FilesController {
         { $limit: pageSize },
       ]);
       const array = await result.toArray();
-      const dataResponse = [];
+      /* const dataResponse = [];
       array.forEach((item) => {
         const data = {
           id: item._id.toString(),
@@ -262,7 +262,8 @@ class FilesController {
         };
         dataResponse.push(data);
       });
-      return res.json(dataResponse);
+      return res.json(dataResponse); */
+      return res.json(array);
     }
     // if no parent Id is passed a query
     // parameter return all documents
@@ -273,7 +274,7 @@ class FilesController {
       { $limit: pageSize },
     ]);
     const array = await result.toArray();
-    const dataResponse = [];
+    /* const dataResponse = [];
     array.forEach((item) => {
       const data = {
         id: item._id.toString(),
@@ -285,7 +286,8 @@ class FilesController {
       };
       dataResponse.push(data);
     });
-    return res.json(dataResponse);
+    return res.json(dataResponse); */
+    return res.json(array);
   }
 }
 module.exports = FilesController;
