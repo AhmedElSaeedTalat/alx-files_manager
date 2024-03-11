@@ -55,7 +55,7 @@ class UsersController {
   }
 
   /*
-   * getMe
+   * @getMe: retrieve user through token
    *
    * @req: passed request
    * @res: passed response
@@ -68,7 +68,7 @@ class UsersController {
     if (!user) {
       return res.status(401).json({ error: 'Unauthorized' });
     }
-    return res.json({ id: user._id, email: user.email });
+    return res.json({ id: user._id.toString(), email: user.email });
   }
 }
 module.exports = UsersController;
