@@ -67,4 +67,13 @@ describe('test apis', () => {
     expect(res.statusCode).to.be.equal(204);
     expect(res.text).to.be.equal('');
   });
+
+  it('GET /users/me', async () => {
+    await dbClient.db.collection('users').insertOne({ email: 'bob@dylan.com', password: sha1('toto1234!') });
+    const connectresponse = await request(app).get('/connect').set('Authorization', 'Basic Ym9iQGR5bGFuLmNvbTp0b3RvMTIzNCE=').send();
+    const { token } = connectresponse.body;
+    const res = await request(app).get('/users/me').set('x-token', token).send();
+    expect(res.statusCode).to.be.equal(200);
+    expect(res.body.email).to.be.equal('bob@dylan.com');
+  });
 });
