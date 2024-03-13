@@ -58,4 +58,13 @@ describe('test apis', () => {
     expect(res.statusCode).to.be.equal(200);
     expect(res.body.token).to.be.a('string');
   });
+
+  it('GET /disconnect', async () => {
+    await dbClient.db.collection('users').insertOne({ email: 'bob@dylan.com', password: sha1('toto1234!') });
+    const connectresponse = await request(app).get('/connect').set('Authorization', 'Basic Ym9iQGR5bGFuLmNvbTp0b3RvMTIzNCE=').send(); 
+    const token = connectresponse.body.token;
+    const res = await request(app).get('/disconnect').set('x-token', token).send();
+    expect(res.statusCode).to.be.equal(204);
+    expect(res.text).to.be.equal('');
+  });
 });
