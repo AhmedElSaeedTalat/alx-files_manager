@@ -40,7 +40,7 @@ class DBClient {
     if (!this.db) {
       return 'error';
     }
-    return this.db.collection('users').countDocuments();
+    return await this.db.collection('users').countDocuments();
   }
 
   /*
