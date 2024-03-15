@@ -55,7 +55,7 @@ class FilesController {
         return res.status(400).json({ error: 'Parent not found' });
       }
       if (parentFile.type !== 'folder') {
-        return res.static(400).json({ error: 'Parent is not a folder' });
+        return res.status(400).json({ error: 'Parent is not a folder' });
       }
     }
     if (type === 'folder') {
