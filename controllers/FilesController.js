@@ -3,6 +3,7 @@ import { v4 } from 'uuid';
 import fs from 'fs';
 import path from 'path';
 import mime from 'mime-types';
+import Queue from 'bull';
 import { promisify } from 'util';
 import redisClient from '../utils/redis';
 import dbClient from '../utils/db';
@@ -93,6 +94,17 @@ class FilesController {
     // insert data about the file in a document in files collection
     const docId = await FilesController.insertDoctument(documentData);
     const foundFile = await FilesController.findFileById(docId);
+    // if type image file is created
+    // a queue to be created
+    if (type === 'image') {
+      const fileQueue = new Queue('fileQueue', {
+        redis: {
+          host: 'localhost',
+          port: 6379,
+        },
+      });
+      fileQueue.add({ userId: foundFile.userId, fileId: foundFile._id.toString() });
+    }
     return res.status(201).json({
       id: foundFile._id.toString(),
       userId: foundFile.userId.toString(),
@@ -372,6 +384,8 @@ class FilesController {
    */
   static async getFile(req, res) {
     const { id } = req.params;
+    const { size } = req.query;
+    const acceptableSizes = [100, 250, 500];
     const file = await FilesController.findFileById(id);
     if (!file) {
       console.log('no file');
@@ -398,7 +412,12 @@ class FilesController {
     }
     const type = mime.lookup(file.name) || 'text/plain';
     res.set('Content-Type', type);
-    const content = await fs.promises.readFile(file.localPath, 'utf-8');
+    let content;
+    if (size && acceptableSizes.includes(size)) {
+      content = await fs.promises.readFile(`${file.localPath}_${size}`, 'utf-8');
+    } else {
+      content = await fs.promises.readFile(file.localPath, 'utf-8');
+    }
     return res.send(content);
   }
 }

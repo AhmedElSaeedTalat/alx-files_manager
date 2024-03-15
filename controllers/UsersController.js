@@ -35,7 +35,7 @@ class UsersController {
    *
    */
   static async findUser(data) {
-    const collection = dbClient.db.collection('users');
+    const collection = await dbClient.db.collection('users');
     const doc = await collection.findOne(data);
     return doc;
   }

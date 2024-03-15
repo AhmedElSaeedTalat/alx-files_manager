@@ -5,6 +5,24 @@ import redisClient from '../utils/redis';
 /* auth module */
 class AuthController {
   /*
+   * @getConnect
+   *
+   * @str: string to check and decode
+   *
+   * @return - decoded string or null
+   *
+   */
+  static isValid64(str) {
+    let decodedString;
+    try {
+      decodedString = Buffer.from(str, 'base64').toString('utf-8');
+      return decodedString;
+    } catch (err) {
+      return null;
+    }
+  }
+
+  /*
    * getConnect
    *
    * @req: request object passed
@@ -16,14 +34,21 @@ class AuthController {
     const { authorization } = req.headers;
     const pattern = '(?<=Basic ).+';
     const authData = authorization.match(pattern);
-    const decodedString = Buffer.from(authData[0], 'base64').toString('utf-8');
+    const decodedString = AuthController.isValid64(authData[0]);
+    if (!decodedString) {
+      return res.status(401).json({ error: 'Unauthorized' });
+    }
     const authDataSplit = decodedString.split(':');
     const email = authDataSplit[0];
     const password = authDataSplit[1];
+    if (!email || !password) {
+      return res.status(401).json({ error: 'Unauthorized' });
+    }
 
     // check if I can find the user and password
     // is valid
     const user = await UsersController.findUser({ email });
+    console.log('i reached this line');
     const hashedPassword = sha1(password);
     if (!user || hashedPassword !== user.password) {
       return res.status(401).json({ error: 'Unauthorized' });
