@@ -48,7 +48,6 @@ class AuthController {
     // check if I can find the user and password
     // is valid
     const user = await UsersController.findUser({ email });
-    console.log('i reached this line');
     const hashedPassword = sha1(password);
     if (!user || hashedPassword !== user.password) {
       return res.status(401).json({ error: 'Unauthorized' });
