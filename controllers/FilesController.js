@@ -47,7 +47,7 @@ class FilesController {
       return res.status(400).json({ error: 'Missing type' });
     }
     if (!data && type !== 'folder') {
-      return res.status(400).send('Missing data');
+      return res.status(400).json({ error: 'Missing data' });
     }
     if (parentId !== 0) {
       const parentFile = await FilesController.findFileById(parentId);
