@@ -47,7 +47,7 @@ describe('test users', () => {
   /*
    * @test: test posting new user and confirming
    * response containing user inserted
-   * 
+   *
    *
    */
   it('post /users', async () => {
